@@ -1,10 +1,10 @@
 <?php
 
-namespace SocialiteProviders\BesteSchulePassport;
+namespace SocialiteProviders\BesteSchule;
 
 use SocialiteProviders\Manager\SocialiteWasCalled;
 
-class BesteSchulePassportExtendSocialite
+class BesteSchuleExtendSocialite
 {
     /**
      * Register the provider.
