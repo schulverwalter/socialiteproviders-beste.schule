@@ -1,0 +1,29 @@
+{
+    "name": "socialiteproviders/besteschule",
+    "description": "beste.schule OAuth2 Provider for Laravel Socialite",
+    "keywords": [
+        "vidis",
+        "vidis.schule",
+        "laravel",
+        "oauth",
+        "provider",
+        "socialite"
+    ],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Schulverwalter",
+            "email": "post@schulverwalter.de"
+        }
+    ],
+    "require": {
+        "php": "^7.2 || ^8.0",
+        "ext-json": "*",
+        "socialiteproviders/manager": "~4.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "SocialiteProviders\\BesteSchule\\": ""
+        }
+    }
+}
