@@ -1,6 +1,6 @@
 <?php
 
-namespace SocialiteProviders\BesteSchulePassport;
+namespace SocialiteProviders\BesteSchule;
 
 use Illuminate\Support\Arr;
 use SocialiteProviders\Manager\OAuth2\AbstractProvider;
