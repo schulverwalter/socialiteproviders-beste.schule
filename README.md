@@ -42,6 +42,18 @@ You should now be able to use the provider like you would regularly use Socialit
 return Socialite::driver('besteschule')->redirect();
 ```
 
+### Scopes
+
+beste.schule gates its API behind explicit OAuth scopes. By default this
+provider requests `read` and `write`, which grants the same full API access
+integrations had before the scopes were introduced (and covers the
+`/api/user` call the provider makes itself). To request a different set,
+e.g. read-only access:
+
+```php
+return Socialite::driver('besteschule')->setScopes(['read'])->redirect();
+```
+
 ### Returned User fields
 
 - ``id`` - equal to ``nickname``

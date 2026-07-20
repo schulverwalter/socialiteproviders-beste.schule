@@ -14,9 +14,16 @@ class Provider extends AbstractProvider
     public const IDENTIFIER = 'BESTESCHULE';
 
     /**
+     * beste.schule gates its API behind explicit scopes: `read` for GET
+     * requests, `write` for state-changing ones. Consumers of this provider
+     * pull data from the API (starting with the /api/user profile call this
+     * provider itself makes), so both are requested by default - existing
+     * applications keep full API access by simply updating the package.
+     * Override with ->scopes([...]) / ->setScopes([...]) for finer grants.
+     *
      * {@inheritdoc}
      */
-    protected $scopes = [''];
+    protected $scopes = ['read', 'write'];
 
     /**
      * {@inheritdoc}
@@ -93,9 +100,9 @@ class Provider extends AbstractProvider
     {
         $data = Arr::get($user, 'data', []);
 
-        $name = $data['username']; //default for admin users
-        if($data['teacher']) $name = $data['teacher']['forename'] . ' ' . $data['teacher']['name'];
-        else if($data['students']) $name = $data['students'][0]['forename'] . ' ' . $data['students'][0]['name'];
+        $name = $data['username'] ?? null; //default for admin users
+        if(!empty($data['teacher'])) $name = $data['teacher']['forename'] . ' ' . $data['teacher']['name'];
+        else if(!empty($data['students'])) $name = $data['students'][0]['forename'] . ' ' . $data['students'][0]['name'];
 
         $email = $this->getUserData($data, 'email');
         if(!$email) $email = $data['username'] . '@besteschule.local';
