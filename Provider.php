@@ -14,16 +14,17 @@ class Provider extends AbstractProvider
     public const IDENTIFIER = 'BESTESCHULE';
 
     /**
-     * beste.schule gates its API behind explicit scopes: `read` for GET
-     * requests, `write` for state-changing ones. Consumers of this provider
-     * pull data from the API (starting with the /api/user profile call this
-     * provider itself makes), so both are requested by default - existing
-     * applications keep full API access by simply updating the package.
-     * Override with ->scopes([...]) / ->setScopes([...]) for finer grants.
+     * beste.schule gates its API behind explicit scopes: `api:read` for GET
+     * requests, `api:write` for state-changing ones. Consumers of this
+     * provider pull data from the API (starting with the /api/user profile
+     * call this provider itself makes), so both are requested by default -
+     * existing applications keep full API access by simply updating the
+     * package. Override with ->scopes([...]) / ->setScopes([...]) for finer
+     * grants.
      *
      * {@inheritdoc}
      */
-    protected $scopes = ['read', 'write'];
+    protected $scopes = ['api:read', 'api:write'];
 
     /**
      * {@inheritdoc}
