@@ -91,6 +91,13 @@ class Provider extends AbstractProvider
      */
     protected function mapUserToObject(array $user)
     {
+        // The OpenID Connect userinfo endpoint answers with flat claims and no
+        // `data` wrapper. Only that shape takes the new path; everything the
+        // legacy `api/user` endpoint returns is mapped exactly as before.
+        if (! array_key_exists('data', $user) && array_key_exists('sub', $user)) {
+            return $this->mapOpenIdUserToObject($user);
+        }
+
         $data = Arr::get($user, 'data', []);
 
         $name = $data['username']; //default for admin users
@@ -106,6 +113,40 @@ class Provider extends AbstractProvider
             'name'     => $name,
             'email'    => $email,
             'avatar'   => null,
+        ]);
+    }
+
+    /**
+     * Map the flat claims of the OpenID Connect userinfo endpoint.
+     *
+     * The id stays the beste.schule username, as in the legacy mapping, so an
+     * account links to the same person whichever endpoint is configured. Which
+     * claims arrive depends on the granted scopes: `name` is shortened with
+     * `profile:redacted`, `roles` needs `roles`, `tenant_*` needs `tenant`,
+     * `groups` needs `groups`.
+     *
+     * @param array $user
+     *
+     * @return \SocialiteProviders\Manager\OAuth2\User
+     */
+    protected function mapOpenIdUserToObject(array $user)
+    {
+        $username = Arr::get($user, 'preferred_username') ?: (string) Arr::get($user, 'sub');
+        $roles = Arr::get($user, 'roles', []);
+        $tenantId = Arr::get($user, 'tenant_id');
+
+        return (new User())->setRaw($user)->map([
+            'id'       => $username,
+            'nickname' => $username,
+            'name'     => Arr::get($user, 'name') ?: $username,
+            'email'    => Arr::get($user, 'email') ?: $username . '@besteschule.local',
+            'avatar'   => null,
+            'role'     => is_array($roles) ? Arr::first($roles) : null,
+            'school'   => $tenantId === null ? null : [
+                'id'   => $tenantId,
+                'name' => Arr::get($user, 'tenant_name'),
+            ],
+            'groups'   => Arr::get($user, 'groups', []),
         ]);
     }
 
