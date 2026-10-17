@@ -107,8 +107,12 @@ class Provider extends AbstractProvider
         $email = $this->getUserData($data, 'email');
         if(!$email) $email = $data['username'] . '@besteschule.local';
 
+        // The id is the numeric beste.schule user id. Without it (an API that
+        // predates the field) the username keeps identifying the account.
+        $id = $this->getUserData($data, 'id');
+
         return (new User())->setRaw($data)->map([
-            'id'       => $this->getUserData($data, 'username'),
+            'id'       => $id !== null && $id !== '' ? (string) $id : $this->getUserData($data, 'username'),
             'nickname' => $this->getUserData($data, 'username'),
             'name'     => $name,
             'email'    => $email,
@@ -119,9 +123,10 @@ class Provider extends AbstractProvider
     /**
      * Map the flat claims of the OpenID Connect userinfo endpoint.
      *
-     * The id stays the beste.schule username, as in the legacy mapping, so an
-     * account links to the same person whichever endpoint is configured. Which
-     * claims arrive depends on the granted scopes: `name` is shortened with
+     * The id is `sub`, the numeric beste.schule user id, exactly what the legacy
+     * mapping returns, so an account links to the same person whichever endpoint
+     * is configured. The username stays available as nickname. Which claims
+     * arrive depends on the granted scopes: `name` is shortened with
      * `profile:redacted`, `roles` needs `roles`, `tenant_*` needs `tenant`,
      * `groups` needs `groups`.
      *
@@ -131,12 +136,13 @@ class Provider extends AbstractProvider
      */
     protected function mapOpenIdUserToObject(array $user)
     {
-        $username = Arr::get($user, 'preferred_username') ?: (string) Arr::get($user, 'sub');
+        $id = (string) Arr::get($user, 'sub');
+        $username = Arr::get($user, 'preferred_username') ?: $id;
         $roles = Arr::get($user, 'roles', []);
         $tenantId = Arr::get($user, 'tenant_id');
 
         return (new User())->setRaw($user)->map([
-            'id'       => $username,
+            'id'       => $id,
             'nickname' => $username,
             'name'     => Arr::get($user, 'name') ?: $username,
             'email'    => Arr::get($user, 'email') ?: $username . '@besteschule.local',

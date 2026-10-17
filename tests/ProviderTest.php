@@ -19,11 +19,12 @@ class ProviderTest extends TestCase
 
     /**
      * The shape of the legacy `api/user` endpoint. Consumers store `id` and look
-     * accounts up by `email`, so this mapping must never change.
+     * accounts up by `email`; the id is the numeric beste.schule user id.
      */
     public function test_legacy_teacher_response_is_mapped_as_before()
     {
         $data = [
+            'id' => 42,
             'username' => 'mmustermann',
             'email' => 'max@example.test',
             'teacher' => ['forename' => 'Max', 'name' => 'Mustermann'],
@@ -32,7 +33,7 @@ class ProviderTest extends TestCase
 
         $user = $this->map(['data' => $data]);
 
-        $this->assertSame('mmustermann', $user->getId());
+        $this->assertSame('42', $user->getId());
         $this->assertSame('mmustermann', $user->getNickname());
         $this->assertSame('Max Mustermann', $user->getName());
         $this->assertSame('max@example.test', $user->getEmail());
@@ -44,14 +45,28 @@ class ProviderTest extends TestCase
     public function test_legacy_student_response_uses_the_first_student()
     {
         $user = $this->map(['data' => [
+            'id' => 7,
             'username' => 'anna1',
             'email' => null,
             'teacher' => null,
             'students' => [['forename' => 'Anna', 'name' => 'Muster']],
         ]]);
 
+        $this->assertSame('7', $user->getId());
         $this->assertSame('Anna Muster', $user->getName());
         $this->assertSame('anna1@besteschule.local', $user->getEmail());
+    }
+
+    public function test_legacy_response_without_an_id_falls_back_to_the_username()
+    {
+        $user = $this->map(['data' => [
+            'username' => 'anna1',
+            'email' => null,
+            'teacher' => null,
+            'students' => [],
+        ]]);
+
+        $this->assertSame('anna1', $user->getId());
     }
 
     public function test_legacy_admin_response_falls_back_to_the_username()
@@ -81,7 +96,7 @@ class ProviderTest extends TestCase
 
         $user = $this->map($claims);
 
-        $this->assertSame('anna1', $user->getId());
+        $this->assertSame('42', $user->getId());
         $this->assertSame('anna1', $user->getNickname());
         $this->assertSame('Anna M.', $user->getName());
         $this->assertSame('anna1@besteschule.local', $user->getEmail());
