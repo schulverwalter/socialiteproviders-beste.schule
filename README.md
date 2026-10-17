@@ -12,7 +12,7 @@ Please see the [Base Installation Guide](https://socialiteproviders.com/usage/),
 
 ```php
 'besteschule' => [
-  'client_url' => env('BESTESCHULE_URL'),  
+  'url' => env('BESTESCHULE_URL'),  
   'client_id' => env('BESTESCHULE_CLIENT_ID'),  
   'client_secret' => env('BESTESCHULE_CLIENT_SECRET'),  
   'redirect' => env('BESTESCHULE_REDIRECT_URI') 
@@ -44,8 +44,12 @@ return Socialite::driver('besteschule')->redirect();
 
 ### Returned User fields
 
-- ``id`` - equal to ``nickname``
-- ``nickname``
+- ``id`` - the numeric beste.schule user id, as a string. Older versions returned the username here; a consumer that stored it must migrate (the username is still available as ``nickname``)
+- ``nickname`` - the username
 - ``name``
-- ``email`` - if empty ``<username>@besteschule.test``
+- ``email`` - if empty ``<username>@besteschule.local``
 - ``avatar`` - empty
+
+### OpenID Connect userinfo
+
+By default the provider reads the legacy ``api/user`` endpoint. To read the OpenID Connect userinfo instead, set ``userinfo_uri`` to ``oauth/userinfo`` and request the scopes you need, e.g. ``openid profile:redacted roles tenant groups``. The flat claims are mapped to the same fields, plus ``role``, ``school`` (``id``, ``name``) and ``groups`` in ``$user->attributes``. ``name`` is shortened with ``profile:redacted`` (students ``Anna M.``, teachers ``B. Mayer``) and spelled out with ``profile:names``.

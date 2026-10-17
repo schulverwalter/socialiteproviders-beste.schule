@@ -25,5 +25,16 @@
         "psr-4": {
             "SocialiteProviders\\BesteSchule\\": ""
         }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.5 || ^11.0"
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "SocialiteProviders\\BesteSchule\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit"
     }
 }

@@ -91,6 +91,13 @@ class Provider extends AbstractProvider
      */
     protected function mapUserToObject(array $user)
     {
+        // The OpenID Connect userinfo endpoint answers with flat claims and no
+        // `data` wrapper. Only that shape takes the new path; everything the
+        // legacy `api/user` endpoint returns is mapped exactly as before.
+        if (! array_key_exists('data', $user) && array_key_exists('sub', $user)) {
+            return $this->mapOpenIdUserToObject($user);
+        }
+
         $data = Arr::get($user, 'data', []);
 
         $name = $data['username']; //default for admin users
@@ -100,12 +107,52 @@ class Provider extends AbstractProvider
         $email = $this->getUserData($data, 'email');
         if(!$email) $email = $data['username'] . '@besteschule.local';
 
+        // The id is the numeric beste.schule user id. Without it (an API that
+        // predates the field) the username keeps identifying the account.
+        $id = $this->getUserData($data, 'id');
+
         return (new User())->setRaw($data)->map([
-            'id'       => $this->getUserData($data, 'username'),
+            'id'       => $id !== null && $id !== '' ? (string) $id : $this->getUserData($data, 'username'),
             'nickname' => $this->getUserData($data, 'username'),
             'name'     => $name,
             'email'    => $email,
             'avatar'   => null,
+        ]);
+    }
+
+    /**
+     * Map the flat claims of the OpenID Connect userinfo endpoint.
+     *
+     * The id is `sub`, the numeric beste.schule user id, exactly what the legacy
+     * mapping returns, so an account links to the same person whichever endpoint
+     * is configured. The username stays available as nickname. Which claims
+     * arrive depends on the granted scopes: `name` is shortened with
+     * `profile:redacted`, `roles` needs `roles`, `tenant_*` needs `tenant`,
+     * `groups` needs `groups`.
+     *
+     * @param array $user
+     *
+     * @return \SocialiteProviders\Manager\OAuth2\User
+     */
+    protected function mapOpenIdUserToObject(array $user)
+    {
+        $id = (string) Arr::get($user, 'sub');
+        $username = Arr::get($user, 'preferred_username') ?: $id;
+        $roles = Arr::get($user, 'roles', []);
+        $tenantId = Arr::get($user, 'tenant_id');
+
+        return (new User())->setRaw($user)->map([
+            'id'       => $id,
+            'nickname' => $username,
+            'name'     => Arr::get($user, 'name') ?: $username,
+            'email'    => Arr::get($user, 'email') ?: $username . '@besteschule.local',
+            'avatar'   => null,
+            'role'     => is_array($roles) ? Arr::first($roles) : null,
+            'school'   => $tenantId === null ? null : [
+                'id'   => $tenantId,
+                'name' => Arr::get($user, 'tenant_name'),
+            ],
+            'groups'   => Arr::get($user, 'groups', []),
         ]);
     }
 
